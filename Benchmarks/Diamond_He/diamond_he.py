@@ -14,30 +14,37 @@ import matplotlib.pyplot as plt
 import sys
 import os
 from libRustBCA import *
-    
+
+
+# Get script directory; will write here 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+
 #############################################
-## RustBCA Directory (Must be set by user) ##
+## RustBCA Directory (Grabbed from root of repo) ##
 ###---------------------------------------###
-os.chdir("/Users/michaeldunn/Documents/Dev/2026/Thesis/RustBCA-Benchmarks/RustBCA")  # Change this to your RustBCA directory
+os.chdir(script_dir + "/../../RustBCA")
 ###---------------------------------------###
 ## End RustBCA Directory                   ##
 #############################################
-print("Current working directory:", os.getcwd())
+
+print("Current working directory:", os.getcwd()) # Confirm directory
 
 # Grab materials and formulas from scripts directory
 sys.path.append(os.getcwd()+'/scripts')
 
 import materials as m
 import time
-from tomlkit import parse, dumps
+from tomlkit import dumps
 
 '''
-This example simulates the implantation of H+ ions 
-at a 45 degree angle into a C diamond target of 100 A thickness.
+This example simulates the implantation of various He+ ions 
+at a 0 degree angle into a C diamond target of 100 A thickness.
 
 The geometry is as follows:
 
-    H (Varying MeV, 0 deg)
+    He+ (Varying MeV, 0 deg)
     |
     V
 __________
@@ -59,8 +66,7 @@ It runs the input file with cargo run --release and reads the output files.
 
 run_sim = True
 mode = '0D'
-incident_energy =  1.6e6 # 1.6 MeV
-number_ions = 100 # at least 10k are typically needed for decent results
+number_ions = 500 # higher energies allow smaller numbers of ions
 angle = 0.1   # degrees; measured from surface normal
 
 '''
@@ -69,9 +75,7 @@ Additional examples can be found in scripts/materials.py, but values
 should be checked for correctness before use. Values are explained
 in the relevant sections below.
 '''
-hydrogen = m.hydrogen
 helium = m.helium
-lithium = m.lithium
 
 # Gong et. all parameters for Diamond
 diamond = {
@@ -89,7 +93,7 @@ diamond = {
 
 
 # species definitions
-ion = hydrogen
+ion = helium
 target1 = diamond
 
 # geometry definitions
@@ -107,11 +111,11 @@ options = {
     'weak_collision_order': 0, # weak collisions at radii (k + 1)*r; enable only when required
     'suppress_deep_recoils': False, # suppress recoils too deep to ever sputter
     'high_energy_free_flight_paths': False, # SRIM-style high energy free flight distances; use with caution
-    'num_threads': 4, # number of threads to run in parallel
+    'num_threads': 24, # number of threads to run in parallel
     'num_chunks': 100, # code will write to file every nth chunk; for very large simulations, increase num_chunks
     'electronic_stopping_mode': 'INTERPOLATED', # Previously 'LOW_ENERGY_NONLOCAL', leads to order of magnitude errors. Use 'INTERPOLATED' instead.
     'mean_free_path_model': 'LIQUID', # liquid is amorphous (constant mean free path); gas is exponentially-distributed mean free paths
-    'interaction_potential': [["ZBL"]], # KRC potential chosen for all interactions
+    'interaction_potential': [['ZBL']], # ZBL potential chosen for all interactions
     'scattering_integral': [
         [
             {
@@ -174,37 +178,42 @@ geometry_0D = {
     'densities': [diamond["n"] / 1e30]
 }
 
-for incident_energy in np.arange(1.6e6, 6.0e6, 0.1e6):
-    print(f'Running simulation for incident energy: {incident_energy} eV')
-    particle_parameters = {
-        'length_unit': 'ANGSTROM',
-        'energy_unit': 'EV',
-        'mass_unit': 'AMU',
-        # number of computational ions of this species to run at this energy
-        'N': [number_ions],
-        # atomic mass
-        'm': [ion["m"]],
-        # atomic number
-        'Z': [ion["Z"]],
-        # incidenet energy 
-        'E': [incident_energy],
-        # cutoff energy - if E < Ec, particle stops
-        'Ec': [ion["Ec"]],
-        # surface binding energy
-        'Es': [ion["Es"]],
-        # initial position - if Es significant and E low, start (n)^(-1/3) above surface
-        # otherwise 0, 0, 0 is fine; most geometry modes have surface at x=0 with target x>0
-        'pos': [[0.0, 0.0, 0.0]],
-        # initial direction unit vector; most geometry modes have x-axis into the surface
-        'dir': [
-            [
-                np.cos(angle*np.pi/180.0),
-                np.sin(angle*np.pi/180.0),
-                0.0
-            ]
+stopping_data = [] # Collect stopping powers here in list
+
+particle_parameters = {
+    'length_unit': 'ANGSTROM',
+    'energy_unit': 'EV',
+    'mass_unit': 'AMU',
+    # number of computational ions of this species to run at this energy
+    'N': [number_ions],
+    # atomic mass
+    'm': [ion["m"]],
+    # atomic number
+    'Z': [ion["Z"]],
+    # incidenet energy 
+    'E': [0.0], # Changed in loop
+    # cutoff energy - if E < Ec, particle stops
+    'Ec': [ion["Ec"]],
+    # surface binding energy
+    'Es': [ion["Es"]],
+    # initial position - if Es significant and E low, start (n)^(-1/3) above surface
+    # otherwise 0, 0, 0 is fine; most geometry modes have surface at x=0 with target x>0
+    'pos': [[0.0, 0.0, 0.0]],
+    # initial direction unit vector; most geometry modes have x-axis into the surface
+    'dir': [
+        [
+            np.cos(angle*np.pi/180.0),
+            np.sin(angle*np.pi/180.0),
+            0.0
+        ]
         ],
     }
 
+
+# Loop over incident energies
+for incident_energy in np.arange(0.5e6, 6.1e6, 0.1e6):
+    print(f'Running simulation for incident energy: {incident_energy} eV')
+    particle_parameters['E'] = [incident_energy]
     input_data = {
         'options': options,
         'material_parameters': material_parameters,
@@ -230,7 +239,7 @@ for incident_energy in np.arange(1.6e6, 6.0e6, 0.1e6):
     depth_col = 4
     energy_cols = [2, 3]
     
-    bin_edges = np.linspace(0.0, 300000.0, 1001)
+    bin_edges = np.linspace(0.0, 300000.0, 10001)
     hist = np.zeros(len(bin_edges) - 1)
     
     # Process in chunks
@@ -244,14 +253,11 @@ for incident_energy in np.arange(1.6e6, 6.0e6, 0.1e6):
     
     loss = None  # Don't need full array anymore
 
-    fig, ax_energy = plt.subplots(1, 1, figsize=(8, 6))
-
     if hist.sum() == 0:
-        ax_energy.text(0.5, 0.5, 'No energy loss data', ha='center', va='center')
-        ax_energy.set_axis_off()
+        print('No energy loss data')
     else:
         # Histogram energy loss data already computed above
-        # Total x coordinate range is 0 to 300000 A with 1000 bins
+        # Total x coordinate range is 0 to 300000 A with 10000 bins
         widths = np.diff(bin_edges)
         energy_density = np.divide(
             hist,
@@ -259,13 +265,6 @@ for incident_energy in np.arange(1.6e6, 6.0e6, 0.1e6):
             out=np.zeros_like(hist, dtype=float),
             where=widths != 0
         )
-
-        ax_energy.bar(bin_edges[:-1], energy_density, width=widths, align='edge')
-        ax_energy.set_xlim(bin_edges[0], bin_edges[-1])
-        ax_energy.set_ylim(0.0, np.max(energy_density) * 1.1 if np.any(energy_density) else 1.0)
-        ax_energy.set_xlabel('x [A]')
-        ax_energy.set_ylabel('dE/dx [eV/A/ion]')
-        ax_energy.set_title('Energy Loss Distribution')
 
     total_loss_per_ion = hist.sum() / number_ions
 
@@ -276,7 +275,21 @@ for incident_energy in np.arange(1.6e6, 6.0e6, 0.1e6):
     range_max = 35000.0 #  End of target
     mask = (bin_edges[:-1] >= range_min) & (bin_edges[:-1] < range_max)
     energy_in_range = np.sum(energy_density[mask] * widths[mask])
-    percent_loss_in_range = (energy_in_range / total_loss_per_ion) * 100.0
+    percent_loss_in_range = (energy_in_range / incident_energy) * 100.0
     stopping_power = energy_in_range / (range_max - range_min)
     print(f'Energy loss per ion in range {range_min} A to {range_max} A: {energy_in_range} eV ({percent_loss_in_range:.2f}%)')
     print(f'Stopping power in range {range_min} A to {range_max} A: {stopping_power} eV/A/ion')
+    stopping_data.append({
+        'Incident Energy (eV)': incident_energy,
+        'Stopping Power (eV/A/ion)': stopping_power,
+        'Percent Energy Loss (%)': percent_loss_in_range
+    })
+
+# Revert to script directory for output
+os.chdir(script_dir)
+
+
+print(stopping_data) # Stopping power data if csv write fails
+# Write to file
+stopping_powers_df = pd.DataFrame(stopping_data)
+stopping_powers_df.to_csv('diamond_he_stopping_powers.csv', index=False)

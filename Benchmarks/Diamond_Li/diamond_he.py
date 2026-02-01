@@ -39,12 +39,12 @@ import time
 from tomlkit import dumps
 
 '''
-This example simulates the implantation of various H+ ions 
+This example simulates the implantation of various Li+ ions 
 at a 0 degree angle into a C diamond target of 100 A thickness.
 
 The geometry is as follows:
 
-    H (Varying MeV, 0 deg)
+    Li+ (Varying MeV, 0 deg)
     |
     V
 __________
@@ -75,7 +75,7 @@ Additional examples can be found in scripts/materials.py, but values
 should be checked for correctness before use. Values are explained
 in the relevant sections below.
 '''
-hydrogen = m.hydrogen
+lithium = m.lithium
 
 # Gong et. all parameters for Diamond
 diamond = {
@@ -93,7 +93,7 @@ diamond = {
 
 
 # species definitions
-ion = hydrogen
+ion = lithium
 target1 = diamond
 
 # geometry definitions
@@ -211,7 +211,7 @@ particle_parameters = {
 
 
 # Loop over incident energies
-for incident_energy in np.arange(1.6e6, 6.1e6, 0.1e6):
+for incident_energy in np.arange(0.5e6, 6.1e6, 0.1e6):
     print(f'Running simulation for incident energy: {incident_energy} eV')
     particle_parameters['E'] = [incident_energy]
     input_data = {
@@ -292,4 +292,4 @@ os.chdir(script_dir)
 print(stopping_data) # Stopping power data if csv write fails
 # Write to file
 stopping_powers_df = pd.DataFrame(stopping_data)
-stopping_powers_df.to_csv('diamond_h_stopping_powers.csv', index=False)
+stopping_powers_df.to_csv('diamond_li_stopping_powers.csv', index=False)
