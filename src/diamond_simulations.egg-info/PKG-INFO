@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: diamond_simulations
+Version: 0.1.0
+Summary: Diamond simulation utilities for RustBCA benchmarks
+Requires-Python: >=3.9
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: dask
+Requires-Dist: matplotlib
+Requires-Dist: tomlkit
+Requires-Dist: IPython
+Dynamic: license-file

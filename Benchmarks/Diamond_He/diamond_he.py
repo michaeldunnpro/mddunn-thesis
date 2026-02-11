@@ -66,7 +66,7 @@ It runs the input file with cargo run --release and reads the output files.
 
 run_sim = True
 mode = '0D'
-number_ions = 500 # higher energies allow smaller numbers of ions
+number_ions = 100 # higher energies allow smaller numbers of ions
 angle = 0.1   # degrees; measured from surface normal
 
 '''
@@ -95,6 +95,9 @@ diamond = {
 # species definitions
 ion = helium
 target1 = diamond
+Z = ion["Z"]
+M = ion["m"]
+
 
 # geometry definitions
 layer_thicknesses = [100.0]
@@ -111,7 +114,7 @@ options = {
     'weak_collision_order': 0, # weak collisions at radii (k + 1)*r; enable only when required
     'suppress_deep_recoils': False, # suppress recoils too deep to ever sputter
     'high_energy_free_flight_paths': False, # SRIM-style high energy free flight distances; use with caution
-    'num_threads': 24, # number of threads to run in parallel
+    'num_threads': 4, # number of threads to run in parallel
     'num_chunks': 100, # code will write to file every nth chunk; for very large simulations, increase num_chunks
     'electronic_stopping_mode': 'INTERPOLATED', # Previously 'LOW_ENERGY_NONLOCAL', leads to order of magnitude errors. Use 'INTERPOLATED' instead.
     'mean_free_path_model': 'LIQUID', # liquid is amorphous (constant mean free path); gas is exponentially-distributed mean free paths
@@ -173,7 +176,7 @@ material_parameters = {
 geometry_0D = {
     'length_unit': 'ANGSTROM',
     # used to correct nonlocal stopping for known compound discrpancies
-    'electronic_stopping_correction_factor': 1.0,
+    'electronic_stopping_correction_factor': 0.0,
     # number densities of each species
     'densities': [diamond["n"] / 1e30]
 }
@@ -211,7 +214,7 @@ particle_parameters = {
 
 
 # Loop over incident energies
-for incident_energy in np.arange(0.5e6, 6.1e6, 0.1e6):
+for incident_energy in np.arange(10e6, 30e6, 1e6):
     print(f'Running simulation for incident energy: {incident_energy} eV')
     particle_parameters['E'] = [incident_energy]
     input_data = {
@@ -279,9 +282,13 @@ for incident_energy in np.arange(0.5e6, 6.1e6, 0.1e6):
     stopping_power = energy_in_range / (range_max - range_min)
     print(f'Energy loss per ion in range {range_min} A to {range_max} A: {energy_in_range} eV ({percent_loss_in_range:.2f}%)')
     print(f'Stopping power in range {range_min} A to {range_max} A: {stopping_power} eV/A/ion')
+    # Convert to stopping power in KeV/um/Z**2 for comparison
+    stopping_power_keV_per_um_per_Z2 = (stopping_power * 1e-3) / (1e-4) / (Z**2)
+    # Convert energy to MeV/amu for comparison
+    incident_energy_MeV_per_amu = (incident_energy * 1e-6)
     stopping_data.append({
-        'Incident Energy (eV)': incident_energy,
-        'Stopping Power (eV/A/ion)': stopping_power,
+        'Incident Energy (MeV/amu)': incident_energy_MeV_per_amu,
+        'Stopping Power (KeV/um/Z^2)': stopping_power_keV_per_um_per_Z2,
         'Percent Energy Loss (%)': percent_loss_in_range
     })
 

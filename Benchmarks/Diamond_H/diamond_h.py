@@ -66,7 +66,7 @@ It runs the input file with cargo run --release and reads the output files.
 
 run_sim = True
 mode = '0D'
-number_ions = 500 # higher energies allow smaller numbers of ions
+number_ions = 100 # higher energies allow smaller numbers of ions
 angle = 0.1   # degrees; measured from surface normal
 
 '''
@@ -75,6 +75,7 @@ Additional examples can be found in scripts/materials.py, but values
 should be checked for correctness before use. Values are explained
 in the relevant sections below.
 '''
+
 hydrogen = m.hydrogen
 
 # Gong et. all parameters for Diamond
@@ -95,6 +96,9 @@ diamond = {
 # species definitions
 ion = hydrogen
 target1 = diamond
+Z = ion["Z"]
+M = ion["m"]
+
 
 # geometry definitions
 layer_thicknesses = [100.0]
@@ -211,7 +215,7 @@ particle_parameters = {
 
 
 # Loop over incident energies
-for incident_energy in np.arange(1.6e6, 6.1e6, 0.1e6):
+for incident_energy in np.arange(1.5e6, 6.1e6, 0.5e6):
     print(f'Running simulation for incident energy: {incident_energy} eV')
     particle_parameters['E'] = [incident_energy]
     input_data = {
@@ -279,9 +283,13 @@ for incident_energy in np.arange(1.6e6, 6.1e6, 0.1e6):
     stopping_power = energy_in_range / (range_max - range_min)
     print(f'Energy loss per ion in range {range_min} A to {range_max} A: {energy_in_range} eV ({percent_loss_in_range:.2f}%)')
     print(f'Stopping power in range {range_min} A to {range_max} A: {stopping_power} eV/A/ion')
+    # Convert to stopping power in KeV/um/Z**2 for comparison
+    stopping_power_keV_per_um_per_Z2 = (stopping_power * 1e-3) / (1e-4) / (Z**2)
+    # Convert energy to MeV/amu for comparison
+    incident_energy_MeV_per_amu = (incident_energy * 1e-6)
     stopping_data.append({
-        'Incident Energy (eV)': incident_energy,
-        'Stopping Power (eV/A/ion)': stopping_power,
+        'Incident Energy (MeV/amu)': incident_energy_MeV_per_amu,
+        'Stopping Power (KeV/um/Z^2)': stopping_power_keV_per_um_per_Z2,
         'Percent Energy Loss (%)': percent_loss_in_range
     })
 

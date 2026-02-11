@@ -1,0 +1,10 @@
+LICENSE
+pyproject.toml
+src/diamond_simulations/__init__.py
+src/diamond_simulations/bindings.py
+src/diamond_simulations/config.py
+src/diamond_simulations.egg-info/PKG-INFO
+src/diamond_simulations.egg-info/SOURCES.txt
+src/diamond_simulations.egg-info/dependency_links.txt
+src/diamond_simulations.egg-info/requires.txt
+src/diamond_simulations.egg-info/top_level.txt
