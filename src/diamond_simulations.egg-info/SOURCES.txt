@@ -1,4 +1,5 @@
 LICENSE
+README.md
 pyproject.toml
 src/diamond_simulations/__init__.py
 src/diamond_simulations/bindings.py
