@@ -9,16 +9,16 @@ from tomlkit import dumps
 from . import config
 
 
-def bethe_stopping_power(epsilon_mev_per_amu):
+def bethe_stopping_power(epsilon_mev_per_amu, electron_density, ionization_energy):
 	"""Compute Bethe stopping power in keV/um for given epsilon (MeV/amu)."""
 	epsilon = epsilon_mev_per_amu * 1e6 * config.Q_E / config.AMU_TO_KG
 	raw = (
 		2
 		* np.pi
-		* config.N_ELECTRONS_DIAMOND
+		* electron_density
 		/ (epsilon * config.M_E)
 		* (config.Q_E**2 / (4 * np.pi * config.EPSILON_0)) ** 2
-		* np.log(4 * config.M_E * epsilon / config.I_DIAMOND)
+		* np.log(4 * config.M_E * epsilon / ionization_energy)
 	)
 	return raw * config.J_TO_KEV / config.M_TO_MICRONS
 

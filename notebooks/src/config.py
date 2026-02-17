@@ -10,7 +10,7 @@ DATA_PATH = os.path.join(BASE_DIR, "data")
 DEFAULT_OUTPUT_DIR = os.path.join(BASE_DIR, "Benchmarks", "Combined Fig", "Data")
 
 ### Bethe Constants (SI base) ###
-EPSILON_0 = 8.854187817e-12
+EPSILON_0 = 8.854187818e-12
 Q_E = 1.602176634e-19
 M_E = 9.10938356e-31
 N_ELECTRONS_DIAMOND = 1.76e29 * 6
