@@ -104,6 +104,36 @@ lithium = {
     'n': 4.63E28
 }
 
+sic = {
+    'symbol' : 'SiC',
+    'name' : 'siliconcarbide',
+    'Z' : [
+        6.0,
+        14.0
+        ],
+    'm' : [
+        12.011,
+        28.08553
+        ],
+    'Ec' : [
+        1.0,
+        1.0
+        ],
+    'Es' : [
+        0.0,
+        0.0
+        ],
+    'Eb' : [
+        0.0,
+        0.0
+    ],
+    'Ed' : [
+        0.0,
+        0.0
+    ],
+    'n' : [5.27E28, 5.27E28]
+}
+
 ### File Paths (Modified by MakeFiles) ###
 RUSTBCA_PATH = os.path.join(SRC_DIR, "..", "RustBCA")
 DATA_PATH = os.path.join(SRC_DIR, "..", "data")

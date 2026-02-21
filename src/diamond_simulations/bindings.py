@@ -23,25 +23,33 @@ def bethe_stopping_power(epsilon_mev_per_amu, electron_density, ionization_energ
 	)
 	return raw * config.J_TO_KEV / config.M_TO_MICRONS
 
+def convert_densities(n):
+	if isinstance(n, float):
+		return n/ 1e30
+	for i, _ in enumerate(n):
+		n[i] /= 1e30
+		return n
+	return n / 1e30
+	
 
-def build_geometry_0d(diamond):
+def build_geometry_0d(material):
 	return {
 		"length_unit": "ANGSTROM",
 		"electronic_stopping_correction_factor": 0.0,
-		"densities": [diamond["n"] / 1e30],
+		"densities": [convert_densities(material["n"])]
 	}
 
 
-def build_material_parameters(diamond):
+def build_material_parameters(material):
 	return {
 		"energy_unit": "EV",
 		"mass_unit": "AMU",
-		"Eb": [diamond["Eb"]],
-		"Es": [diamond["Es"]],
-		"Ec": [diamond["Ec"]],
-		"Ed": [diamond["Ed"]],
-		"Z": [diamond["Z"]],
-		"m": [diamond["m"]],
+		"Eb": [material["Eb"]],
+		"Es": [material["Es"]],
+		"Ec": [material["Ec"]],
+		"Ed": [material["Ed"]],
+		"Z": [material["Z"]],
+		"m": [material["m"]],
 		"interaction_index": [0, 0],
 		"surface_binding_model": {"PLANAR": {"calculation": "INDIVIDUAL"}},
 		"bulk_binding_model": "INDIVIDUAL",
@@ -159,8 +167,8 @@ def run_species_simulation(
 			)
 
 		widths = np.diff(bin_edges)
-		range_min = 0.0
-		range_max = 35000.0
+		range_min = np.min(energy_read_range)
+		range_max = np.max(energy_read_range)
 		mask = (bin_edges[:-1] >= range_min) & (bin_edges[:-1] < range_max)
 		energy_in_range = np.sum(energy_density[mask] * widths[mask])
 		percent_loss_in_range = (energy_in_range / energy_ev) * 100.0
