@@ -1,2 +1,11 @@
 # File for ignoring various system and IDE files
 .DS_Store
+pypycache__/
+__pycache__/
+pyproject.toml
+*.pyc
+*.pyo
+*.pyd
+*.swp
+.idea/
+.vscode/

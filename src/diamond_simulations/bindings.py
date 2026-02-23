@@ -28,15 +28,14 @@ def convert_densities(n):
 		return n/ 1e30
 	for i, _ in enumerate(n):
 		n[i] /= 1e30
-		return n
-	return n / 1e30
+	return n
 	
 
-def build_geometry_0d(material):
+def build_geometry_0d(material, electronic_correction = 1.0):
 	return {
 		"length_unit": "ANGSTROM",
-		"electronic_stopping_correction_factor": 0.0,
-		"densities": [convert_densities(material["n"])]
+		"electronic_stopping_correction_factor": electronic_correction,
+		"densities": [convert_densities(material["n"])] if not isinstance(material["n"], list) else convert_densities(material["n"])
 	}
 
 
@@ -44,12 +43,12 @@ def build_material_parameters(material):
 	return {
 		"energy_unit": "EV",
 		"mass_unit": "AMU",
-		"Eb": [material["Eb"]],
-		"Es": [material["Es"]],
-		"Ec": [material["Ec"]],
-		"Ed": [material["Ed"]],
-		"Z": [material["Z"]],
-		"m": [material["m"]],
+		"Eb": [material["Eb"]] if not isinstance(material["Eb"], list) else material["Eb"],
+		"Es": [material["Es"]] if not isinstance(material["Es"], list) else material["Es"],
+		"Ec": [material["Ec"]] if not isinstance(material["Ec"], list) else material["Ec"],
+		"Ed": [material["Ed"]] if not isinstance(material["Ed"], list) else material["Ed"],
+		"Z": [material["Z"]] if not isinstance(material["Z"], list) else material["Z"],
+		"m": [material["m"]] if not isinstance(material["m"], list) else material["m"],
 		"interaction_index": [0, 0],
 		"surface_binding_model": {"PLANAR": {"calculation": "INDIVIDUAL"}},
 		"bulk_binding_model": "INDIVIDUAL",
