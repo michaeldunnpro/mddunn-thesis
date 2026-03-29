@@ -6,6 +6,7 @@ Requires-Python: >=3.9
 License-File: LICENSE
 Requires-Dist: numpy
 Requires-Dist: pandas
+Requires-Dist: scipy
 Requires-Dist: dask
 Requires-Dist: matplotlib
 Requires-Dist: tomlkit

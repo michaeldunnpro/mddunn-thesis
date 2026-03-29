@@ -4,10 +4,10 @@ import sys
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+from scipy import interpolate
 from tomlkit import dumps
 
 from . import config
-
 
 def bethe_stopping_power(epsilon_mev_per_amu, electron_density, ionization_energy):
 	"""Compute Bethe stopping power in keV/um for given epsilon (MeV/amu)."""
@@ -92,6 +92,8 @@ def run_species_simulation(
 	angle_deg=config.DEFAULT_ANGLE_DEG,
 	energy_read_range=None,
 	clear_output=None,
+	return_interpolants=False,
+	lam = 1e-4
 ):
 	if energy_read_range is None:
 		energy_read_range = np.linspace(
@@ -108,6 +110,7 @@ def run_species_simulation(
 	particle_parameters = build_particle_parameters(species, number_ions, angle_deg)
 
 	stopping_data = []
+	interpolants = [] # List of energy loss interpolants in given range
 	for energy_mev_per_amu, energy_ev in zip(energies_mev_per_amu, energies_in):
 		print(
 			f"Running simulation for incident energy: {energy_mev_per_amu} MeV/amu"
@@ -136,7 +139,6 @@ def run_species_simulation(
 			)
 			.dropna()
 		)
-
 		depth_col = 4
 		energy_cols = [2, 3]
 		bin_edges = energy_read_range
@@ -164,7 +166,6 @@ def run_species_simulation(
 				out=np.zeros_like(hist, dtype=float),
 				where=widths != 0,
 			)
-
 		widths = np.diff(bin_edges)
 		range_min = np.min(energy_read_range)
 		range_max = np.max(energy_read_range)
@@ -175,7 +176,9 @@ def run_species_simulation(
 		stopping_power_keV_per_um_per_Z2 = (
 			(stopping_power * 1e-3) / (1e-4) / (species["Z"] ** 2)
 		)
-
+		energy_density_kev_micron = energy_density*1e-3*1e4
+		bin_edges_micron = bin_edges*1e-4
+		stopping_curve = interpolate.make_smoothing_spline(bin_edges_micron[:-1], energy_density_kev_micron, lam=lam)
 		stopping_data.append(
 			{
 				"Incident Energy (MeV/amu)": energy_mev_per_amu,
@@ -183,6 +186,7 @@ def run_species_simulation(
 				"Percent Energy Loss (%)": percent_loss_in_range,
 			}
 		)
+		interpolants.append(stopping_curve)
 
 		if clear_output:
 			clear_output()
@@ -193,4 +197,7 @@ def run_species_simulation(
 	print(
 		f"{species['name'].capitalize()} ion simulation and data processing complete."
 	)
+	if return_interpolants:
+		# If in interpolant mode, return the stopping power curves
+		return interpolants
 	return stopping_powers_df

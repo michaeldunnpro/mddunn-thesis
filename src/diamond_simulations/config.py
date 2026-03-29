@@ -1,4 +1,4 @@
-SRC_DIR = "/Users/michaeldunn/Documents/Dev/2026/Thesis/RustBCA-Benchmarks/src"
+SRC_DIR = "/home/michael/Documents/Dev/RustBCA-Benchmarks/src"
 '''
 Simulation configuration options, file paths, and materials.
 '''
